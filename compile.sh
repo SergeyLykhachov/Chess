@@ -1,0 +1,1 @@
+javac -Xlint:unchecked -d bin -sourcepath src src/com/yahoo/slykhachov/chess/Chess.java
