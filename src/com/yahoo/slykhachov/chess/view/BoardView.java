@@ -15,10 +15,11 @@ import java.io.File;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.imageio.ImageIO;
+import javax.swing.DefaultListModel;
+import javax.swing.JPanel;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EtchedBorder;
-import javax.swing.JPanel;
 import com.yahoo.slykhachov.chess.ChessGame;
 import com.yahoo.slykhachov.chess.Move;
 import com.yahoo.slykhachov.chess.White;
@@ -145,22 +146,22 @@ public class BoardView extends JPanel {
 	private BoardModel boardModel;
 	private HashMap<String, PieceView> views;
 	private PieceView actedUponPieceView = null;
-	
+	private DefaultListModel<String> listModel;
 	public BoardView(ChessGame chessGame, BoardModel boardModel) {
-		views = new HashMap<>();
-		setChessGame(chessGame);
-		setBoardModel(boardModel);
+		this.views = new HashMap<>();
+		this.setChessGame(chessGame);
+		this.setBoardModel(boardModel);
 		List<PieceModel> models = getNonCapturedPieceModels(getBoardModel());
-		setPreferredSize(new Dimension(500, 500));
+		this.setPreferredSize(new Dimension(500, 500));
 		initViews(
 			this.views,
 			models,
 			getPreferredSize()
 		);	
 		BoardViewMouseListener listener = new BoardViewMouseListener();
-		addMouseMotionListener(listener);
-		addMouseListener(listener);
-		setBorder(
+		this.addMouseMotionListener(listener);
+		this.addMouseListener(listener);
+		this.setBorder(
 			new CompoundBorder(
 				new BevelBorder(BevelBorder.RAISED),
 				new EtchedBorder()
@@ -195,9 +196,17 @@ public class BoardView extends JPanel {
 			key = String.valueOf(pModel.getRow()) + String.valueOf(pModel.getCol());
 			if (pModel.getClass().equals(PawnModel.class)) {
 				if (isWhite) {
-					bi = white_pawn_image;
+					if (((PawnModel) pModel).getCurrentState().equals(PawnState.PROMOTED)) {
+						bi = white_queen_image;
+					} else {
+						bi = white_pawn_image;
+					}
 				} else {
-					bi = black_pawn_image;
+					if (((PawnModel) pModel).getCurrentState().equals(PawnState.PROMOTED)) {
+						bi = black_queen_image;
+					} else {
+						bi = black_pawn_image;
+					}
 				}
 				PieceView pawnView = new PieceView(
 					convertToPoint2D(
@@ -370,13 +379,13 @@ public class BoardView extends JPanel {
 		g2d.dispose();
 	}
 	public void updateBoardView() {
-		getViews().clear();
-		initViews(
+		this.getViews().clear();
+		this.initViews(
 			getViews(),
-			getNonCapturedPieceModels(getBoardModel()),
+			getNonCapturedPieceModels(this.getBoardModel()),
 			getPreferredSize()
 		);
-		this.repaint();	
+		this.repaint();
 	}
 	public void setChessGame(ChessGame chessGame) {
 		this.chessGame = chessGame;
@@ -389,6 +398,9 @@ public class BoardView extends JPanel {
 	}
 	public BoardModel getBoardModel() {
 		return this.boardModel;
+	}
+	public void setListModel(DefaultListModel<String> listModel) {
+		this.listModel = listModel;
 	}
 	private class BoardViewMouseListener implements MouseMotionListener, MouseListener {	
 		private PieceModel pieceModel;
@@ -451,18 +463,17 @@ public class BoardView extends JPanel {
 				    }
 				}
 				if (move != null) {
-					getBoardModel().performMove(move);					
-					//getViews().clear();
-					//initViews(
-					//	getViews(),
-					//	getNonCapturedPieceModels(getBoardModel()),
-					//	getPreferredSize()
-					//);
-					//repaint();	
+					getBoardModel().performMove(move);
 					getChessGame().setAdversaryToMove(
 						adversaryToMove.getOpponent()
 					);
 					actedUponPieceView = null;
+					if (listModel != null) {
+						String s = getBoardModel().getNumberOfMovesPerformed()
+							+ ".  " + move.toDisplayableString();
+						listModel.addElement(s);
+					}
+					System.out.println(boardModel);
 					updateBoardView();
 					getChessGame().doResponce();
 				} else {			

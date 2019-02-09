@@ -5,19 +5,23 @@ import com.yahoo.slykhachov.chess.Move;
 import com.yahoo.slykhachov.chess.White;
 
 public class BoardModel {
-	private final PieceModel[][] board;
-	private final Stack<Tuple> stack = new Stack<>();
-	private final AdversaryModel adversary1;
-	private final AdversaryModel adversary2;
+	private PieceModel[][] board;
+	private Stack<Tuple> stack;
+	private AdversaryModel adversary1;
+	private AdversaryModel adversary2;
 	private int finalScore;
 	public BoardModel(AdversaryModel adv1, AdversaryModel adv2) {
-		board = new PieceModel[8][8];
+		this.init(adv1, adv2);
+	}
+	private void init(AdversaryModel adv1, AdversaryModel adv2) {
+		this.board = new PieceModel[8][8];
 		this.adversary1 = adv1;
 		this.adversary2 = adv2;
 		loadPieces(adversary1, this.board);
 		loadPieces(adversary2, this.board);
 		this.adversary1.setOpponent(this.adversary2);
 		this.adversary2.setOpponent(this.adversary1);
+		this.stack = new Stack<>();
 	}
 	private static void loadPieces(AdversaryModel adv, PieceModel[][] board) {
 		for (PieceModel piece : adv.getPieces()) {
@@ -26,8 +30,14 @@ public class BoardModel {
 			}
 		}
 	}
+	public void reset(AdversaryModel adv1, AdversaryModel adv2) {
+		this.init(adv1, adv2);
+	}
 	public boolean isSafeToUndo() {
 		return this.stack.size() >= 2;
+	}
+	public int getNumberOfMovesPerformed() {
+		return this.stack.size();
 	}
 	public void performMove(Move move) {
 		int finRow = move.getFinalRow();

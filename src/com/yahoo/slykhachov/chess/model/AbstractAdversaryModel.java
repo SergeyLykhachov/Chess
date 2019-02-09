@@ -7,7 +7,7 @@ import com.yahoo.slykhachov.chess.Move;
 import com.yahoo.slykhachov.chess.function.IntFunction;
 
 public abstract class AbstractAdversaryModel implements AdversaryModel {
-	private final PieceModel[] pieces;
+	private PieceModel[] pieces;
 	private AdversaryModel opponent;
 	private PawnModel enPassantVulnerablePawn = null;
 	public AbstractAdversaryModel(PieceModel[] arrayOfPieces) {
@@ -115,7 +115,7 @@ public abstract class AbstractAdversaryModel implements AdversaryModel {
 		}
 	}
 	@Override
-	public boolean isCheckMated(BoardModel board) {
+	public boolean isCheckMate(BoardModel board) {
 		KingModel king = (KingModel) this.pieces[15];
 		if (king.isInCheck(board)) {
 			if (king.generateAllPossibleMoves(board).length == 0) {
@@ -139,5 +139,9 @@ public abstract class AbstractAdversaryModel implements AdversaryModel {
 	@Override
 	public boolean isChecked(BoardModel board) {
 		return ((KingModel) this.pieces[15]).isInCheck(board);
+	}
+	@Override
+	public boolean isStaleMate(BoardModel board) {
+		return generateAllPossibleLegalMoves(board).size() == 0;
 	}
 }

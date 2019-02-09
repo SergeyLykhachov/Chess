@@ -11,9 +11,6 @@ public class ChessGameView extends JPanel {
 	public ChessGameView(BoardView boardView) {
 		this.boardView = boardView;
 		add(new BoardBorderView(boardView), BorderLayout.CENTER);
-		//JPanel panel = new JPanel();
-		//panel.setPreferredSize(new Dimension(300, 500));
-		//add(panel, BorderLayout.EAST);	
 	}
 	public BoardView getBoardView() {
 		return this.boardView;
