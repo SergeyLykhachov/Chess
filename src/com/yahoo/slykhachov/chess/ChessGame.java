@@ -23,7 +23,7 @@ import com.yahoo.slykhachov.chess.view.ChessGameView;
 
 public class ChessGame {
 	public static final int SEARCH_DEPTH = 5;
-	public static final ExecutorService POOL = Executors.newFixedThreadPool(1);//newCachedThreadPool();
+	public static final ExecutorService POOL = Executors.newFixedThreadPool(1);
 	private ChessGameModel chessGameModel;
 	private ChessGameView chessGameView;
 	private Board board;
@@ -34,15 +34,14 @@ public class ChessGame {
 	private ExecutorService pool;
 	private DefaultListModel<String> listModel;
 	public ChessGame() {
-		//this.pool = Executors.newCachedThreadPool();
 		this.setBlackPlayer(new Black());
 		this.setWhitePlayer(new White());
 		this.setBoard(new Board(blackPlayer, whitePlayer, this));
 		this.setChessGameModel(new ChessGameModel(getBoard().getBoardModel()));
 		this.setChessGameView(new ChessGameView(getBoard().getBoardView()));
 	    this.setAdversaryToMove(whitePlayer);
-	    this.setComputerAdversary(blackPlayer);
-	    //this.setComputerAdversary(whitePlayer);
+	    //this.setComputerAdversary(blackPlayer);
+	    this.setComputerAdversary(whitePlayer);
 	    if (getComputerAdversary() == whitePlayer) {
 			this.doResponce();
 	    }
