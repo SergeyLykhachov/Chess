@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import com.yahoo.slykhachov.chess.Move;
 import com.yahoo.slykhachov.chess.function.IntFunction;
+import com.yahoo.slykhachov.chess.function.MyTriPredicate;
 
 public abstract class AbstractAdversaryModel implements AdversaryModel {
 	private PieceModel[] pieces;
@@ -64,16 +65,36 @@ public abstract class AbstractAdversaryModel implements AdversaryModel {
 		}
 		return list;
 	}
+	private static KingModel getKing(AdversaryModel adversary) {
+		return (KingModel) adversary.getPieces()[15];
+	}
 	private static void addCastlings(BoardModel board, List<Move> list,
 			AdversaryModel adversary) {
-		if (!((KingModel) adversary.getPieces()[15]).hasEverBeenMoved()) {
-			addCastling(board, list, adversary, 7, 6, index -> ++index);
-			addCastling(board, list, adversary, 0, 2, index -> --index);
+		if (! AbstractAdversaryModel.getKing(adversary).hasEverBeenMoved()) {
+			AbstractAdversaryModel.addCastling(
+				board,
+				list,
+				adversary,
+				7,
+				6,
+				index -> ++index,
+				(brd, row, col) -> true
+			);
+			AbstractAdversaryModel.addCastling(
+				board,
+				list,
+				adversary,
+				0,
+				2,
+				index -> --index,
+				(brd, row, col) -> brd[row][col] == null
+			);
 		}
 	}
 	private static void addCastling(BoardModel board, List<Move> list, 
-			AdversaryModel adversary, int rookCol, int finKingCol, IntFunction function) {
-		KingModel king = (KingModel) adversary.getPieces()[15];
+			AdversaryModel adversary, int rookCol, int finKingCol,
+			IntFunction function, MyTriPredicate predicate) {
+		KingModel king = AbstractAdversaryModel.getKing(adversary);
 		int kingRow = king.getRow();
 		PieceModel[][] bord = board.getBoard();
 		PieceModel supposedRook = bord[kingRow][rookCol];
@@ -81,33 +102,35 @@ public abstract class AbstractAdversaryModel implements AdversaryModel {
 			if (supposedRook.getClass().equals(RookModel.class)) {
 				if (!((RookModel) supposedRook).hasEverBeenMoved()) {
 					if (!adversary.isChecked(board)) {
-						boolean addCastling = true;
-						int testCol = function.apply(king.getCol());
-						for (int lim = 0; lim < 2; lim++) {
-							testCol = function.apply(testCol);
-							if (bord[kingRow][testCol] != null
-								|| Sapper.isSpotUnderAttack(
-									board.getBoard(),
-									adversary.getClass(),
-									kingRow,
-									testCol
-								)
-							) {
-								addCastling = false;
-								break;
+						if (predicate.test(bord, kingRow, 1)) {
+							boolean addCastling = true;
+							int testCol = king.getCol();
+							for (int lim = 0; lim < 2; lim++) {
+								testCol = function.apply(testCol);
+								if (bord[kingRow][testCol] != null
+									|| Sapper.isSpotUnderAttack(
+										board.getBoard(),
+										adversary.getClass(),
+										kingRow,
+										testCol
+									)
+								) {
+									addCastling = false;
+									break;
+								}
 							}
-						}
-						if (addCastling) {
-							list.add(
-								new Move(
-									king,
-									kingRow,
-									king.getCol(),
-									kingRow,
-									finKingCol,
-									supposedRook
-								)
-							);
+							if (addCastling) {
+								list.add(
+									new Move(
+										king,
+										kingRow,
+										king.getCol(),
+										kingRow,
+										finKingCol,
+										supposedRook
+									)
+								);
+							}
 						}
 					}	
 				}
@@ -116,7 +139,7 @@ public abstract class AbstractAdversaryModel implements AdversaryModel {
 	}
 	@Override
 	public boolean isCheckMate(BoardModel board) {
-		KingModel king = (KingModel) this.pieces[15];
+		KingModel king = AbstractAdversaryModel.getKing(this);
 		if (king.isInCheck(board)) {
 			if (king.generateAllPossibleMoves(board).length == 0) {
 				for (Move move : this.generateAllPossibleMoves(board)) {
@@ -138,7 +161,7 @@ public abstract class AbstractAdversaryModel implements AdversaryModel {
 	}
 	@Override
 	public boolean isChecked(BoardModel board) {
-		return ((KingModel) this.pieces[15]).isInCheck(board);
+		return AbstractAdversaryModel.getKing(this).isInCheck(board);
 	}
 	@Override
 	public boolean isStaleMate(BoardModel board) {
