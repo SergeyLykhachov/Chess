@@ -40,7 +40,6 @@ public class MoveChooser {
 				    return finale;
 				}
 			}
-			//Possibly check for stale mate here
 		} 
 		Best myBest = new Best(); 
 		Best reply;               
