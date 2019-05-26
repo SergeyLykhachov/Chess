@@ -74,7 +74,6 @@ class StaticEvaluator {
 			8,
 			minimizerPieces
 		);
-		///////////////////////////////////////////////////////////////////
 		int maximizerPromotedPawnCount = findNonCapturedPieceCount(
 			p -> p.getClass().equals(PawnModel.class) 
 				&& ((PawnModel) p).getCurrentState().equals(PawnState.PROMOTED),
@@ -87,11 +86,8 @@ class StaticEvaluator {
 			8,
 			minimizerPieces
 		);
-		///////////////////////////////////////////////////////////////////
 		return 900 * (maximizerQueenCount - minimizerQueenCount)
-			   ////////////////////////////////////////////////////////////
 			   + 800 * (maximizerPromotedPawnCount - minimizerPromotedPawnCount)
-			   ////////////////////////////////////////////////////////////
 			   + 500 * (maximizerRookCount - minimizerRookCount)
 			   + 325 * (maximizerBishopCount - minimizerBishopCount)
 			   + 300 * (maximizerKnightCount - minimizerKnightCount)
