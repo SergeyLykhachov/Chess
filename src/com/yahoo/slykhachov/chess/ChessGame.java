@@ -40,8 +40,8 @@ public class ChessGame {
 		this.setChessGameModel(new ChessGameModel(getBoard().getBoardModel()));
 		this.setChessGameView(new ChessGameView(getBoard().getBoardView()));
 	    this.setAdversaryToMove(whitePlayer);
-	    //this.setComputerAdversary(blackPlayer);
-	    this.setComputerAdversary(whitePlayer);
+	    this.setComputerAdversary(blackPlayer);
+	    //this.setComputerAdversary(whitePlayer);
 	    if (getComputerAdversary() == whitePlayer) {
 			this.doResponce();
 	    }

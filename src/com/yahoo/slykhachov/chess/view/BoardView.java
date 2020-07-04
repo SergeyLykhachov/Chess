@@ -7,7 +7,8 @@ import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.awt.event.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseAdapter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -23,8 +24,18 @@ import javax.swing.border.EtchedBorder;
 import com.yahoo.slykhachov.chess.ChessGame;
 import com.yahoo.slykhachov.chess.Move;
 import com.yahoo.slykhachov.chess.White;
-import com.yahoo.slykhachov.chess.model.*;
-import static java.util.stream.Collectors.*;
+import com.yahoo.slykhachov.chess.model.AdversaryModel;
+import com.yahoo.slykhachov.chess.model.BoardModel;
+import com.yahoo.slykhachov.chess.model.BishopModel;
+import com.yahoo.slykhachov.chess.model.KingModel;
+import com.yahoo.slykhachov.chess.model.KnightModel;
+import com.yahoo.slykhachov.chess.model.QueenModel;
+import com.yahoo.slykhachov.chess.model.PawnModel;
+import com.yahoo.slykhachov.chess.model.PawnState;
+import com.yahoo.slykhachov.chess.model.PieceModel;
+import com.yahoo.slykhachov.chess.model.RookModel;
+
+import static java.util.stream.Collectors.toList;
 
 public class BoardView extends JPanel {
 	private static final long serialVersionUID = 1L;
@@ -170,7 +181,7 @@ public class BoardView extends JPanel {
 	}
 	private static void initImage() {
 		try {
-			pieces = ImageIO.read(new File("./img/pieces2.png"));
+			pieces = ImageIO.read(new File("./img/Pieces2.png"));
 		} catch (Exception ex) {
 			ex.printStackTrace(System.err);
 			System.exit(-1);
@@ -183,7 +194,7 @@ public class BoardView extends JPanel {
 	private static List<PieceModel> getNonCapturedPieceModels(BoardModel bm) {
 		return Stream.of(bm.getAdversaries())
 			.flatMap(adversary -> Stream.of(adversary.getPieces()))
-			.filter(model -> model.isCaptured() == false)
+			.filter(model -> !model.isCaptured())
 			.collect(toList());
 	}
 	private static void initViews(HashMap<String, PieceView> pieceViews,
@@ -326,11 +337,10 @@ public class BoardView extends JPanel {
 		}
 	}
 	private static Point2D.Double convertToPoint2D(int row ,int col, Dimension dimension) {
-		Point2D.Double point = new Point2D.Double(
+		return new Point2D.Double(
 				col * (dimension.getWidth() / 8),
 				row * (dimension.getHeight() / 8)
 		);
-		return point;
 	}
 	public HashMap<String, PieceView> getViews() {
 		return this.views;
@@ -380,7 +390,7 @@ public class BoardView extends JPanel {
 	}
 	public void updateBoardView() {
 		this.getViews().clear();
-		this.initViews(
+		BoardView.initViews(
 			getViews(),
 			getNonCapturedPieceModels(this.getBoardModel()),
 			getPreferredSize()
@@ -402,7 +412,7 @@ public class BoardView extends JPanel {
 	public void setListModel(DefaultListModel<String> listModel) {
 		this.listModel = listModel;
 	}
-	private class BoardViewMouseListener implements MouseMotionListener, MouseListener {	
+	private class BoardViewMouseListener extends MouseAdapter {
 		private PieceModel pieceModel;
 		@Override
 		public void mousePressed(MouseEvent me)	{
@@ -440,70 +450,70 @@ public class BoardView extends JPanel {
 		}
 		@Override
 		public void mouseReleased(MouseEvent me) {
-			if (actedUponPieceView != null) {
-				AdversaryModel adversaryToMove = getChessGame().getAdversaryToMove();
-				double x = me.getX();
-				double y = me.getY();
-				int row = (int) ((y / getPreferredSize().getWidth()) * 8);
-				int col = (int) ((x / getPreferredSize().getHeight()) * 8);
-				List<Move> listOfMoves = adversaryToMove.generateAllPossibleLegalMoves(getBoardModel());
-				Move candidateMove = new Move(
-					this.pieceModel,
-					this.pieceModel.getRow(),
-					this.pieceModel.getCol(),
-					row,
-					col,
-					null
-				);
-				Move move = null;
-				for (Move m : listOfMoves) {
-				    if (candidateMove.partiallyEquals(m)) {
-				    	move = m;
-				    	break;
-				    }
-				}
-				if (move != null) {
-					getBoardModel().performMove(move);
-					getChessGame().setAdversaryToMove(
-						adversaryToMove.getOpponent()
+			if (me.getButton() == MouseEvent.BUTTON1) {
+				if (actedUponPieceView != null) {
+					AdversaryModel adversaryToMove = getChessGame().getAdversaryToMove();
+					double x = me.getX();
+					double y = me.getY();
+					int row = (int) ((y / getPreferredSize().getWidth()) * 8);
+					int col = (int) ((x / getPreferredSize().getHeight()) * 8);
+					List<Move> listOfMoves = adversaryToMove.generateAllPossibleLegalMoves(getBoardModel());
+					Move candidateMove = new Move(
+							this.pieceModel,
+							this.pieceModel.getRow(),
+							this.pieceModel.getCol(),
+							row,
+							col,
+							null
 					);
-					actedUponPieceView = null;
-					if (listModel != null) {
-						String s = getBoardModel().getNumberOfMovesPerformed()
-							+ ".  " + move.toDisplayableString();
-						listModel.addElement(s);
+					Move move = null;
+					for (Move m : listOfMoves) {
+						if (candidateMove.partiallyEquals(m)) {
+							move = m;
+							break;
+						}
 					}
-					System.out.println(boardModel);
-					updateBoardView();
-					getChessGame().doResponce();
-				} else {			
-					actedUponPieceView.getPoint()
-						.setLocation(
-							pieceModel.getCol() * (getPreferredSize().getWidth() / 8),
-							pieceModel.getRow() * (getPreferredSize().getHeight() / 8)
-					);
-					views.put(
-						String.valueOf(pieceModel.getRow()) + String.valueOf(pieceModel.getCol()),
-						actedUponPieceView
-					);
-					repaint();
-					actedUponPieceView = null;
+					if (move != null) {
+						getBoardModel().performMove(move);
+						getChessGame().setAdversaryToMove(
+								adversaryToMove.getOpponent()
+						);
+						actedUponPieceView = null;
+						if (listModel != null) {
+							String s = getBoardModel().getNumberOfMovesPerformed()
+									+ ".  " + move.toDisplayableString();
+							listModel.addElement(s);
+						}
+						System.out.println(boardModel);
+						updateBoardView();
+						getChessGame().doResponce();
+					} else {
+						actedUponPieceView.getPoint()
+								.setLocation(
+										pieceModel.getCol() * (getPreferredSize().getWidth() / 8),
+										pieceModel.getRow() * (getPreferredSize().getHeight() / 8)
+								);
+						views.put(
+								String.valueOf(pieceModel.getRow()) + String.valueOf(pieceModel.getCol()),
+								actedUponPieceView
+						);
+						repaint();
+						actedUponPieceView = null;
+					}
 				}
 			}
 		}
 		@Override
 		public void mouseDragged(MouseEvent me)	{
-			if (me.getButton() == MouseEvent.BUTTON1) {
-				if (actedUponPieceView != null) {
-					int x = me.getX();
-					int y = me.getY();
-					actedUponPieceView.getPoint()
-						.setLocation(
-						    x - getPreferredSize().getWidth() / 16,
-						    y - getPreferredSize().getHeight() / 16
-					);
-					repaint();
-				}
+			if (actedUponPieceView != null) {
+				int x = me.getX();
+				int y = me.getY();
+				actedUponPieceView.getPoint()
+					.setLocation(
+					    x - getPreferredSize().getWidth() / 16,
+					    y - getPreferredSize().getHeight() / 16
+				);
+				repaint();
 			}
 		}
 		@Override
